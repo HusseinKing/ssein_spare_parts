@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-// Modal.js// Inside Modal.js
 import React from "react";
 
 const Modal = ({ children, onClose }) => {
