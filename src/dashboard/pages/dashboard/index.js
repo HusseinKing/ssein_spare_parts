@@ -1,0 +1,13 @@
+export { Home as Home } from "./home.jsx";
+export { Notifications as Notifications } from "./notifications.jsx";
+export { Tables as Tables } from "./tables.jsx";
+export { UserTables as UserTables } from "./user-table.jsx";
+export { default as Reports } from "./report.jsx";
+export { DebtorTable as DebtorTable } from "./debtors.jsx";
+export { CreditorTable as CreditorTable } from "./creditors.jsx";
+export { QueriesTable as QueriesTable } from "./queries.jsx";
+export { InquiriesTable as InquiriesTable } from "./inquiry.jsx";
+export { Profile as Profile } from "./profile.jsx";
+export { CarsPage as CarsPage } from "./car.jsx";
+export { CashBookTable as CashBookTable } from "./cashBook.jsx";
+export { ClientTables as ClientTables } from "./client-product.jsx";
