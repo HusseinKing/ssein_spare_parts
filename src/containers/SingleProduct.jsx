@@ -62,7 +62,7 @@ const SingleProduct = () => {
                   </div>
                   <div className="w-full">
                     <h4 className="mb-1 text-xl font-bold text-dark dark:text-black">
-                      Whatsap Number
+                      WhatsApp Number
                     </h4>
                     <p className="text-base text-body-color dark:text-dark-6">
                       +62 81 414 257 9980

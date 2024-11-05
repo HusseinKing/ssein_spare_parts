@@ -99,7 +99,8 @@ const CategorySection = () => {
     <div className="max-w-screen-xl px-4 py-8 mx-auto lg:gap-8 xl:gap-0 lg:py-16 lg:grid-cols-12">
       <h1 className="mb-4 text-3xl font-semibold">Shop By Category</h1>
       <p className="mb-8 text-gray-600">
-        Sagittis Purus Sit Amet Ultrices Dui Volutpat Consequat Mauris.
+        Here are some of our best products. We have a wide range of products to
+        choose from.
       </p>
 
       <Slider {...settings} className="mb-8">

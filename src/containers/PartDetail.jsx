@@ -97,7 +97,7 @@ const PartDetail = () => {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {partData?.data?.part?.images.map((image, index) => (
+                {partData?.data?.part?.images?.map((image, index) => (
                   <img
                     key={index}
                     src={image}

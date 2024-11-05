@@ -6,7 +6,6 @@ const BestProducts = () => {
       name: "Air & Fuel Delivery",
       imageUrl:
         "https://cdn.revolutionparts.com/assets/categories/fuel-system.webp",
-      //add react details please
       details: "Description for Air & Fuel Delivery part",
     },
     {

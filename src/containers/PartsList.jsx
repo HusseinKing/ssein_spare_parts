@@ -49,10 +49,6 @@ const PartsList = () => {
               className="object-cover w-full mb-4 rounded"
             />
             <p className="mb-4 text-gray-700">{part.description}</p>
-            {/* <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-green-600">{part.price}</span>
-                        <span className="text-gray-500">{part.condition}</span>
-                    </div> */}
             <div className="flex space-x-2">
               {part.brands.map((brand, index) => (
                 <img

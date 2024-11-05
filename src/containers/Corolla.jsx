@@ -74,7 +74,7 @@ const Corolla = () => {
                   {category.category}
                 </h2>
                 <ul>
-                  {category.sub_categories.map((subCategory, subIndex) => (
+                  {category?.sub_categories?.map((subCategory, subIndex) => (
                     <li
                       key={subIndex}
                       className="text-gray-700"
