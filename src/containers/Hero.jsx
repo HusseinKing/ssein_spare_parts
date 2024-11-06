@@ -8,9 +8,6 @@ const HeroSection = () => {
   const [models, setModels] = useState([]);
   const [years, setYears] = useState([]);
   const [trimEngine, setTrimEngine] = useState([]);
-  // fetch model
-  // fetch years
-  // trip and engine
   const [selectedInputs, setSelectedInputs] = useState({
     year: "",
     make: "",

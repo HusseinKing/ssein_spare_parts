@@ -25,7 +25,6 @@ const Corolla = () => {
     model,
     engine,
   };
-  // Use regex to separate trim and engine
   const engineRegex = /(.+)\s+([\d.]+L\s+[A-Za-z0-9\-\ ]+)/;
   const [, trim, engineWithoutTrim] = engine.match(engineRegex) || [];
   const engineWithTrim = engineWithoutTrim || engine;
