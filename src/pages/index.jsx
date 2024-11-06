@@ -17,7 +17,6 @@ import {
   PartDetail,
 } from "../containers";
 
-// public routes
 const HomePage = () => <Home />;
 const NotFoundPage = () => <NotFound />;
 const UnAuthorizedPage = () => <UnAuthorized />;
@@ -32,7 +31,6 @@ const ProductListPage = () => <ProductList />;
 const PartsListPage = () => <PartsList />;
 const PartDetailPage = () => <PartDetail />;
 
-// export
 export {
   HomePage,
   NotFoundPage,

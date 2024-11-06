@@ -34,6 +34,4 @@ const publicRoutes = [
   { path: "/part-detail/:id", element: <PartDetailPage /> },
 ];
 
-// Protected Routes
-
 export { publicRoutes };
