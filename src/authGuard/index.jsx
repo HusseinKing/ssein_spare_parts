@@ -2,7 +2,6 @@ import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
-// Wrapper component for protecting routes
 const AuthGuard = ({ requiredRoles }) => {
   const { user } = useSelector((state) => state.auth);
 
