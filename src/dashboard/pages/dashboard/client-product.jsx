@@ -20,7 +20,7 @@ export function ClientTables() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [isSoldFilter, setIsSoldFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [productsPerPage] = useState(15); // Number of products to display per page
+  const [productsPerPage] = useState(15);
   const [selectedProducts, setSelectedProducts] = useState([]);
 
   const API_URL = "https://test.husseinking.com";

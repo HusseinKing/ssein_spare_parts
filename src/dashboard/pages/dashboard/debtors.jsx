@@ -22,7 +22,6 @@ import { FaFilePdf } from "react-icons/fa6";
 import { FaFileCsv } from "react-icons/fa6";
 import jsPDF from "jspdf";
 export function DebtorTable() {
-  // const [debtorData, setDebtorData] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editDebtorId, setEditDebtorId] = useState(0);
   const [editDebtors, setEditDebtors] = useState(false);

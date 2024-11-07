@@ -15,7 +15,7 @@ export function Profile() {
     email: "",
     password: "",
   });
-  const [showPassword, setShowPassword] = useState(false); // State to manage password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const API_URL = "https://test.husseinking.com";
 

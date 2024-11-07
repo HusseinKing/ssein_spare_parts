@@ -52,7 +52,7 @@ export function Tables() {
   const [errorMessage, setErrorMessage] = useState("");
   const [editingProductId, setEditingProductId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [productsPerPage] = useState(15); // Number of products to display per page
+  const [productsPerPage] = useState(15); 
 
   const API_URL = "https://test.husseinking.com";
   const handleAddProduct = () => {
