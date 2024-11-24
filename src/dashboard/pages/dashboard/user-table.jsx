@@ -13,7 +13,7 @@ import { FaEdit } from "react-icons/fa";
 import { MdAutoDelete } from "react-icons/md";
 import { IoMdAddCircle } from "react-icons/io";
 import { IoIosCloseCircle } from "react-icons/io";
-import { MdSecurity } from "react-icons/md"; // Added for permission icon
+import { MdSecurity } from "react-icons/md";
 import Loader from "react-js-loader";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -36,6 +36,12 @@ export function UserTables() {
     role: "",
     password: "",
   });
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    role: "",
+    password: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(5);
 
@@ -46,9 +52,20 @@ export function UserTables() {
     setNewUserData({ ...newUserData, [name]: value });
   };
 
-  const handleEditUser = (id) => {
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData({ ...editFormData, [name]: value });
+  };
+
+  const handleEditUser = (user) => {
+    setEditUserId(user.id);
+    setEditFormData({
+      name: user.name || "",
+      email: user.email || "",
+      role: user.role || "",
+      password: "", // Empty password field for editing
+    });
     setEditUserData(true);
-    setEditUserId(id);
   };
 
   useEffect(() => {
@@ -59,14 +76,12 @@ export function UserTables() {
     }
   }, []);
 
-  // Mock permission management functions
   const handlePermissionClick = (user) => {
     setSelectedUser(user);
     setShowPermissionModal(true);
   };
 
   const handlePermissionSave = () => {
-    // Mock saving permissions
     const updatedUsers = userTableData.map((user) => {
       if (user.id === selectedUser.id) {
         return {
@@ -95,9 +110,15 @@ export function UserTables() {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
+      const payload = {
+        ...editFormData,
+        // Only include password if it was changed
+        ...(editFormData.password && { password: editFormData.password }),
+      };
+
       const response = await axios.patch(
         `${API_URL}/users/${editUserId}`,
-        { role: newUserData.role },
+        payload,
         {
           headers: {
             Accept: "application/json",
@@ -106,12 +127,15 @@ export function UserTables() {
           },
         },
       );
+
+      toast.success("User updated successfully");
       setEditUserData(false);
-      toast.success("User status updated successfully");
-      window.location.reload();
+      // Refresh the user list
+      fetchUsers();
     } catch (error) {
-      console.error("Error updating user status:", error);
-      setErrorMessage("Error updating user status. Please try again.");
+      console.error("Error updating user:", error);
+      toast.error(error.response?.data?.message || "Error updating user");
+    } finally {
       setLoading(false);
     }
   };
@@ -119,36 +143,36 @@ export function UserTables() {
   const isAdmin = userRole === "admin";
   const isSuperAdmin = userRole === "superadmin";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const response = await axios.get(`${API_URL}/users/`, {
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const usersWithPermissions = response.data?.data?.users.map((user) => ({
-          ...user,
-          permissions: {
-            canEdit: false,
-            canDelete: false,
-            canView: true,
-          },
-        }));
-        setUserTableData(usersWithPermissions);
-        setLoading(false);
-      } catch (error) {
-        console.error("Fetching user table data failed:", error);
-      }
-    };
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`${API_URL}/users/`, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const usersWithPermissions = response.data?.data?.users.map((user) => ({
+        ...user,
+        permissions: {
+          canEdit: false,
+          canDelete: false,
+          canView: true,
+        },
+      }));
+      setUserTableData(usersWithPermissions);
+      setLoading(false);
+    } catch (error) {
+      console.error("Fetching user table data failed:", error);
+      toast.error("Failed to fetch users");
+    }
+  };
 
-    fetchData();
+  useEffect(() => {
+    fetchUsers();
   }, []);
 
   const handleAddUser = async () => {
-    setShowAddForm(true);
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
@@ -161,7 +185,6 @@ export function UserTables() {
       });
 
       toast.success("User added successfully");
-      window.location.reload();
       setNewUserData({
         name: "",
         email: "",
@@ -169,8 +192,10 @@ export function UserTables() {
         password: "",
       });
       setShowAddForm(false);
+      fetchUsers();
     } catch (error) {
-      setErrorMessage("Error adding user. Please try again.");
+      toast.error(error.response?.data?.message || "Error adding user");
+    } finally {
       setLoading(false);
     }
   };
@@ -178,7 +203,7 @@ export function UserTables() {
   const handleDeleteUser = async (id) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.delete(`${API_URL}/users/${id}`, {
+      await axios.delete(`${API_URL}/users/${id}`, {
         headers: {
           Accept: "application/json",
           Authorization: `Bearer ${token}`,
@@ -187,7 +212,7 @@ export function UserTables() {
       });
 
       toast.success("User deleted successfully");
-      window.location.reload();
+      fetchUsers();
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("Error deleting user");
@@ -320,7 +345,7 @@ export function UserTables() {
                         {(isSuperAdmin || user.permissions?.canEdit) && (
                           <FaEdit
                             className="text-blue-500 cursor-pointer"
-                            onClick={() => handleEditUser(user.id)}
+                            onClick={() => handleEditUser(user)}
                           />
                         )}
                         {(isSuperAdmin || user.permissions?.canDelete) &&
@@ -396,15 +421,6 @@ export function UserTables() {
               </div>
             </div>
 
-            {errorMessage && (
-              <div
-                className="px-4 py-3 mb-4 text-red-700 bg-red-100 border-l-4 border-red-500"
-                role="alert"
-              >
-                <p className="font-bold">{errorMessage}</p>
-              </div>
-            )}
-
             <div className="flex gap-4">
               <Button
                 color="gray"
@@ -416,7 +432,7 @@ export function UserTables() {
               <Button
                 color="blue"
                 onClick={handlePermissionSave}
-                className="flex-1 text-blue-gray-600"
+                className="flex-1 text-gray-600"
                 disabled={loading}
               >
                 {loading ? <Loader /> : "Save Changes"}
@@ -452,7 +468,7 @@ export function UserTables() {
             <div className="mb-4">
               <label className="block mb-1 text-sm text-gray-600">Email</label>
               <input
-                type="text"
+                type="email"
                 placeholder="Email"
                 name="email"
                 value={newUserData.email}
@@ -492,49 +508,126 @@ export function UserTables() {
             <Button
               color="blue"
               onClick={handleAddUser}
-              className="w-full text-gray-600"
+              className="w-full"
               disabled={loading}
             >
-              {loading ? <Loader /> : "Add Role"}
+              {loading ? <Loader /> : "Add User"}
             </Button>
           </div>
         </div>
       )}
 
-      {/* Edit User Form Modal */}
+      {/* Enhanced Edit User Form Modal */}
       {editUserData && (
         <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full bg-black bg-opacity-60">
-          <div className="p-8 bg-white rounded-md shadow-lg">
-            <div className="flex items-center justify-between mb-4">
+          <div className="p-8 bg-white rounded-md shadow-lg w-[500px]">
+            <div className="flex items-center justify-between mb-6">
               <Typography variant="h6" color="gray">
-                Edit User Role
+                Edit User Information
               </Typography>
-              <button onClick={() => setEditUserData(false)}>
+              <button
+                onClick={() => {
+                  setEditUserData(false);
+                  setEditFormData({
+                    name: "",
+                    email: "",
+                    role: "",
+                    password: "",
+                  });
+                }}
+              >
                 <IoIosCloseCircle className="text-xl text-gray-500 hover:text-gray-700" />
               </button>
             </div>
-            <div className="mb-4">
-              <label className="block mb-1 text-sm text-gray-600">Role</label>
-              <select
-                name="role"
-                value={newUserData.role}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-              >
-                <option value="">Select role</option>
-                <option value="agent">Agent</option>
-                <option value="admin">Admin</option>
-                <option value="client">Client</option>
-              </select>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-1 text-sm text-gray-600">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={editFormData.name}
+                  onChange={handleEditInputChange}
+                  placeholder="User name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 text-sm text-gray-600">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={editFormData.email}
+                  onChange={handleEditInputChange}
+                  placeholder="Email address"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 text-sm text-gray-600">Role</label>
+                <select
+                  name="role"
+                  value={editFormData.role}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="">Select role</option>
+                  <option value="agent">Agent</option>
+                  <option value="admin">Admin</option>
+                  <option value="client">Client</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block mb-1 text-sm text-gray-600">
+                  New Password (leave blank to keep unchanged)
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={editFormData.password}
+                  onChange={handleEditInputChange}
+                  placeholder="New password"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {errorMessage && (
+                <div className="p-3 text-sm text-red-500 bg-red-100 rounded">
+                  {errorMessage}
+                </div>
+              )}
+
+              <div className="flex gap-4 pt-4">
+                <Button
+                  color="gray"
+                  onClick={() => {
+                    setEditUserData(false);
+                    setEditFormData({
+                      name: "",
+                      email: "",
+                      role: "",
+                      password: "",
+                    });
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="blue"
+                  onClick={handleEditUserSubmit}
+                  className="flex-1 bg-gray-600 text"
+                  disabled={loading}
+                >
+                  {loading ? <Loader /> : "Update User"}
+                </Button>
+              </div>
             </div>
-            <Button
-              color="blue"
-              onClick={handleEditUserSubmit}
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? <Loader /> : "Update Role"}
-            </Button>
           </div>
         </div>
       )}
