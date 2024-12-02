@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-key */
 import { Routes, Route } from "react-router-dom";
 import { Sidenav, DashboardNavbar, Footer } from "../widgets/layout";
 import { routes } from "../routes"; // Importing the modified routes function
@@ -17,7 +16,7 @@ export function Dashboard() {
   const filteredRoutes = routes(userRole);
   return (
     <div className="min-h-screen bg-blue-gray-50/50">
-      <Sidenav routes={filteredRoutes} /> {/* Pass the filtered routes */}
+      <Sidenav routes={filteredRoutes} /> 
       <div className="p-4 xl:ml-80">
         <DashboardNavbar />
         <Routes>
@@ -25,7 +24,7 @@ export function Dashboard() {
             ({ layout, pages }) =>
               layout === "dashboard" &&
               pages.map(({ path, element }) => (
-                <Route exact path={path} element={element} key={path} /> // Adding a key prop
+                <Route exact path={path} element={element} key={path} />
               )),
           )}
         </Routes>
