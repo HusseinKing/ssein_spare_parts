@@ -100,7 +100,6 @@ export const CarsPage = () => {
 
   useEffect(() => {
     const filteredData = carTableData.filter((car) => {
-  
       if (isSoldFilter === "all") {
         return true; // Return all cars
       } else if (isSoldFilter === "sold") {
@@ -263,10 +262,10 @@ export const CarsPage = () => {
       formData.append("model", carData.model);
       formData.append("year", carData.year);
       formData.append("engine", carData.engine);
-      formData.append("image", carData.image); 
-      formData.append("dmc", carData.dmc); 
+      formData.append("image", carData.image);
+      formData.append("dmc", carData.dmc);
       formData.append("assessment_doc", carData.assessment_doc);
-      formData.append("tax_doc", carData.tax_doc); 
+      formData.append("tax_doc", carData.tax_doc);
       formData.append("selling_price", carData.selling_price);
       formData.append("transport_fees", carData.transport_fees);
       formData.append("purchase_price", carData.purchase_price);
@@ -277,11 +276,11 @@ export const CarsPage = () => {
       const response = await axios.post(`${API_URL}/car-product/`, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          "Content-Type": "multipart/form-data", 
+          "Content-Type": "multipart/form-data",
         },
       });
 
-      toast.success(`Successfully added car with ID ${carData.vinNumber}`);
+      toast.success(`Successfully added car with ID ${carData?.vin_number}`);
       setLoading(false);
       setShowAddForm(false);
       window.location.reload();
@@ -294,7 +293,7 @@ export const CarsPage = () => {
 
   // Function to download data as PDF
   const handleDownloadPDF = () => {
-    const doc = new jsPDF("l", "pt", "letter"); 
+    const doc = new jsPDF("l", "pt", "letter");
 
     // Define column widths and row heights
     const columnWidths = [
@@ -344,22 +343,22 @@ export const CarsPage = () => {
           context,
           is_sold,
         }) => [
-            id,
-            vinNumber,
-            description,
-            make,
-            model,
-            year,
-            engine,
-            selling_price,
-            transport_fees,
-            purchase_price,
-            tax,
-            other_expenses,
-            discount,
-            context,
-            is_sold ? "Sold" : "In Stock",
-          ],
+          id,
+          vinNumber,
+          description,
+          make,
+          model,
+          year,
+          engine,
+          selling_price,
+          transport_fees,
+          purchase_price,
+          tax,
+          other_expenses,
+          discount,
+          context,
+          is_sold ? "Sold" : "In Stock",
+        ],
       ),
       startY: 20,
       styles: {
@@ -412,22 +411,22 @@ export const CarsPage = () => {
         context,
         is_sold,
       }) => [
-          id,
-          vinNumber,
-          `"${description.replace(/"/g, '""')}"`, // Escape double quotes
-          make,
-          model,
-          year,
-          engine,
-          selling_price,
-          transport_fees,
-          purchase_price,
-          tax,
-          other_expenses,
-          discount,
-          `"${context.replace(/"/g, '""')}"`, // Escape double quotes
-          is_sold ? "Sold" : "In Stock",
-        ],
+        id,
+        vinNumber,
+        `"${description.replace(/"/g, '""')}"`, // Escape double quotes
+        make,
+        model,
+        year,
+        engine,
+        selling_price,
+        transport_fees,
+        purchase_price,
+        tax,
+        other_expenses,
+        discount,
+        `"${context.replace(/"/g, '""')}"`, // Escape double quotes
+        is_sold ? "Sold" : "In Stock",
+      ],
     );
 
     const headers = [
@@ -622,10 +621,11 @@ export const CarsPage = () => {
                       },
                       key,
                     ) => {
-                      const className = `py-3 px-5 ${key === currentCars.length - 1
+                      const className = `py-3 px-5 ${
+                        key === currentCars.length - 1
                           ? ""
                           : "border-b border-blue-gray-50"
-                        }`;
+                      }`;
 
                       return (
                         <tr key={id}>
@@ -1011,10 +1011,11 @@ export const CarsPage = () => {
             (_, i) => (
               <li key={i}>
                 <Button
-                  className={`px-3 py-1 rounded-md ${currentPage === i + 1
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === i + 1
                       ? "bg-black text-white"
                       : "bg-gray-200 text-black"
-                    } focus:outline-none`}
+                  } focus:outline-none`}
                   onClick={() => handlePagination(i + 1)}
                 >
                   {i + 1}

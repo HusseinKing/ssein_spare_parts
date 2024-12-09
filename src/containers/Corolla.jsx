@@ -35,7 +35,7 @@ const Corolla = () => {
   };
   useEffect(() => {
     fetch(
-      `https://parts.husseinking.com/categories/?model=${model}&make=Toyota&year=${year}&trim=${trim}&engine=${engineWithTrim}&scope=parts`,
+      `https://test.husseinking.com/categories/?model=${model}&make=Toyota&year=${year}&trim=${trim}&engine=${engineWithTrim}&scope=parts`,
       {
         method: "GET",
       },

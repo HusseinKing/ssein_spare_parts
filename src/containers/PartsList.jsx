@@ -14,7 +14,7 @@ const PartsList = () => {
   const navigate = useNavigate();
   useEffect(() => {
     fetch(
-      `https://parts.husseinking.com/parts/?model=${model}&make=Toyota&year=${year}&trim=${trim}&engine=${engine}&sub_cat=${subCategory}&scope=parts`,
+      `https://test.husseinking.com/parts/?model=${model}&make=Toyota&year=${year}&trim=${trim}&engine=${engine}&sub_cat=${subCategory}&scope=parts`,
       {
         method: "GET",
       },
