@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -8,7 +7,6 @@ import {
   Button,
 } from "@material-tailwind/react";
 import jsPDF from "jspdf";
-import { CSVLink } from "react-csv";
 import "jspdf-autotable";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,28 +15,26 @@ import { MdAutoDelete } from "react-icons/md";
 import { IoMdAddCircle } from "react-icons/io";
 import { IoIosCloseCircle } from "react-icons/io";
 import { AiOutlineTransaction } from "react-icons/ai";
-import { FaQrcode } from "react-icons/fa";
 import axios from "axios";
 import Loader from "react-js-loader";
 import { jwtDecode } from "jwt-decode";
 import { FaFilePdf } from "react-icons/fa6";
-import { FaFileCsv } from "react-icons/fa6";
+import { RiPageSeparator } from "react-icons/ri";
+import BatteryDismantleModal from "./BatteryDismantleModal";
 
-export function Tables() {
+export function Battery() {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [viewProduct, setViewProduct] = useState(false);
-  const [editProduct, setEditProduct] = useState(false);
-  const [sellProduct, setSellProduct] = useState(false);
-  const [product, setProduct] = useState("");
-  const [singleProduct, setSingleProduct] = useState({});
+  const [viewBattery, setViewBattery] = useState(false);
+  const [editBattery, setEditBattery] = useState(false);
+  const [sellBattery, setSellBattery] = useState(false);
+  const [singleBattery, setSingleBattery] = useState({});
   const [userRole, setUserRole] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [productTableData, setProductTableData] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [BatteryTableData, setBatteryTableData] = useState([]);
+  const [filteredBatteries, setFilteredBatteries] = useState([]);
   const [isSoldFilter, setIsSoldFilter] = useState("all");
-  const [productData, setProductData] = useState({
-    num: "",
-    description: "",
+  const [BatteryData, setBatteryData] = useState({
+    cells_count: "",
     selling_price: 0,
     purchase_price: 0,
     tax: 0,
@@ -50,12 +46,16 @@ export function Tables() {
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [editingProductId, setEditingProductId] = useState(null);
+  const [editingBatteryId, setEditingBatteryId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [productsPerPage] = useState(15);
+  const [BatteriesPerPage] = useState(15);
+  const [isDismantleModalOpen, setIsDismantleModalOpen] = useState(false);
+  const [selectedBatteryIdForDismantle, setSelectedBatteryIdForDismantle] =
+    useState(null);
+  const [selectedBatteryCellCount, setSelectedBatteryCellCount] = useState(0);
 
   const API_URL = "https://test.husseinking.com";
-  const handleAddProduct = () => {
+  const handleAddBattery = () => {
     setShowAddForm(!showAddForm);
   };
   useEffect(() => {
@@ -68,44 +68,44 @@ export function Tables() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(` ${API_URL}/products/`, {
+        const response = await axios.get(` ${API_URL}/battery/full`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
-        setProductTableData(response.data?.data?.products);
+        setBatteryTableData(response.data?.data?.batteries);
       } catch (error) {
         console.log(error);
       }
     };
     fetchData();
   }, []);
-
-  // Update the calculation of indexOfFirstProduct and indexOfLastProduct to use filteredProducts
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct,
+  console.log("BatteryTableData", BatteryTableData);
+  // Update the calculation of indexOfFirstBattery and indexOfLastBattery to use filteredBatteries
+  const indexOfLastBattery = currentPage * BatteriesPerPage;
+  const indexOfFirstBattery = indexOfLastBattery - BatteriesPerPage;
+  const currentBatteries = filteredBatteries?.slice(
+    indexOfFirstBattery,
+    indexOfLastBattery,
   );
 
-  const handleSellProducts = async (id) => {
-    const getProductResponse = await axios.get(`${API_URL}/products/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+  const handleSellBatteries = async (id) => {
+    const getBatteryResponse = await axios.get(
+      `${API_URL}/battery/full/${id}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
       },
-    });
-    setSingleProduct(getProductResponse?.data?.data?.product);
-    setSellProduct(true);
-    setEditingProductId(id);
-    // Other logic for editing product...
+    );
+    setSingleBattery(getBatteryResponse?.data?.data?.battery);
+    setSellBattery(true);
+    setEditingBatteryId(id);
+    // Other logic for editing Battery...
   };
-  const handleViewProduct = async (id) => {
-    setViewProduct(true);
-    setProduct(`${API_URL}/products/qrcode/${id}`);
-  };
+
   const isAgent = userRole === "agent";
   const isAdmin = userRole === "admin";
 
@@ -114,17 +114,15 @@ export function Tables() {
     setLoading(true);
     try {
       const {
-        num,
-        description,
+        cells_count,
         selling_price,
         purchase_price,
         tax,
         other_expenses,
-      } = productData;
+      } = BatteryData;
 
       const requestData = {
-        num,
-        description,
+        cells_count,
         selling_price,
         purchase_price,
         tax,
@@ -134,93 +132,94 @@ export function Tables() {
         context: "",
         other_expenses,
       };
-      const response = await axios.post(`${API_URL}/products/`, requestData, {
+      await axios.post(`${API_URL}/battery/`, requestData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
-      toast.success("Product added successfully");
+      toast.success("Battery added successfully");
       window.location.reload();
       setShowAddForm(false);
     } catch (error) {
-      setErrorMessage("Failed to add product. Please try again.");
+      setErrorMessage("Failed to add Battery. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-  const handleViewEditProduct = async (id) => {
-    const getProductResponse = await axios.get(`${API_URL}/products/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
-    setSingleProduct(getProductResponse?.data?.data?.product);
-    setEditProduct(true);
-    setEditingProductId(id);
+  const handleDismantle = (id, cellCount) => {
+    setSelectedBatteryIdForDismantle(id);
+    setSelectedBatteryCellCount(cellCount);
+    setIsDismantleModalOpen(true);
   };
-  const handleEditProduct = async (id) => {
+  const handleViewEditBattery = async (id) => {
+    const getBatteryResponse = await axios.get(
+      `${API_URL}/battery/full/${id}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      },
+    );
+    setSingleBattery(getBatteryResponse?.data?.data?.battery);
+    setEditBattery(true);
+    setEditingBatteryId(id);
+  };
+  const handleEditBattery = async (id) => {
     setLoading(true);
     try {
       const {
-        num,
-        description,
+        cells_count,
         selling_price,
         purchase_price,
         tax,
         other_expenses,
-      } = productData;
+      } = BatteryData;
 
       const requestData = {
-        num,
-        description,
+        cells_count,
         selling_price,
         purchase_price,
         tax,
         other_expenses,
-        is_sold: false,
       };
-      const response = await axios.post(
-        `${API_URL}/products/${editingProductId}`,
-        requestData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
+      await axios.patch(`${API_URL}/battery/full/${id}`, requestData, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-      );
-      setEditProduct(false);
-      setProductData({
-        num: "",
-        description: "",
+      });
+      setEditBattery(false);
+      setBatteryData({
+        cells_count: "",
         selling_price: 0,
         purchase_price: 0,
         tax: 0,
         other_expenses: 0,
       });
-      toast.success("Product updated successfully");
+      toast.success("Battery updated successfully");
       window.location.reload();
     } catch (error) {
-      console.error("Error updating product:", error);
-      toast.error("Error updating product");
+      console.error("Error updating Battery:", error);
+      toast.error("Error updating Battery");
     }
   };
-  const handleSellProduct = async () => {
+  const handleSellBattery = async () => {
     setLoading(true);
     try {
-      const { discount, context, selling_price } = productData;
+      const { discount, context, selling_price } = BatteryData;
       const requestData = {
         discount,
         context,
         is_sold: true,
+        sold_fully: true,
         selling_price,
         sold_date: Date.now(),
       };
-      // get product
-      const response = await axios.post(
-        `${API_URL}/products/${editingProductId}`,
+      // get Battery
+      await axios.patch(
+        `${API_URL}/battery/full/${editingBatteryId}`,
         requestData,
         {
           headers: {
@@ -229,40 +228,40 @@ export function Tables() {
           },
         },
       );
-      toast.success("Product sold successfully");
+      toast.success("Battery sold successfully");
       window.location.reload();
-      setEditingProductId(null);
+      setEditingBatteryId(null);
     } catch (error) {
-      setErrorMessage("Failed to sell product. Please try again.");
+      setErrorMessage("Failed to sell Battery. Please try again.");
     } finally {
       setLoading(false);
     }
   };
   const handlePrintQRCodeInPdf = () => {
     const doc = new jsPDF();
-    doc.addImage(product, "JPEG", 10, 10, 100, 100);
+    doc.addImage(Battery, "JPEG", 10, 10, 100, 100);
     doc.save("QRCode.pdf");
     toast.success("QR Code printed successfully");
   };
-  const handleDeleteProduct = async (id) => {
+  const handleDeleteBattery = async (id) => {
     try {
-      // Show a confirmation dialog before deleting the product
+      // Show a confirmation dialog before deleting the Battery
       const confirmed = window.confirm(
-        "Are you sure you want to delete this product?",
+        "Are you sure you want to delete this Battery?",
       );
       if (!confirmed) {
         return; // If user cancels, do not proceed with deletion
       }
-      const response = await axios.delete(`${API_URL}/products/${id}`, {
+      await axios.delete(`${API_URL}/battery/full/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
       window.location.reload();
-      toast.success("Product deleted successfully");
+      toast.success("Battery deleted successfully");
       window.location.reload();
     } catch (error) {
-      toast.error("Deleting product failed:", error);
+      toast.error("Deleting Battery failed:", error);
     }
   };
   const handleSearchChange = (e) => {
@@ -273,51 +272,32 @@ export function Tables() {
     const { value } = e.target;
     setIsSoldFilter(value);
   };
-
+  console.log("singleBattery", BatteryTableData);
   useEffect(() => {
     if (isSoldFilter === "all") {
-      // Show all products without any additional filtering
-      setFilteredProducts(productTableData);
+      // Show all Batteries without any additional filtering
+      setFilteredBatteries(BatteryTableData);
     } else {
       // Apply filtering based on the selected filter value
-      const filteredData = productTableData.filter((product) => {
-        const numMatchesSearch = product.num
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
-        const descriptionMatchesSearch = product.description
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
-        let matchesSearch = numMatchesSearch || descriptionMatchesSearch;
-
+      const filteredData = BatteryTableData?.filter((battery) => {
         if (isSoldFilter === "selected") {
-          return product.actions.some(
+          return battery.actions.some(
             (action) => action.action_type === "intent",
           );
         } else if (isSoldFilter === "sold") {
-          return matchesSearch && product.is_sold;
+          return battery.is_sold;
         } else if (isSoldFilter === "inStock") {
-          return matchesSearch && !product.is_sold;
+          return !Battery.is_sold;
+        } else if (isSoldFilter === "dismantled") {
+          return Battery.sold_fully;
         }
+
         return false;
       });
-      setFilteredProducts(filteredData);
+      setFilteredBatteries(filteredData);
     }
     setCurrentPage(1); // Reset pagination to first page when filter changes
-  }, [isSoldFilter, searchQuery, productTableData]);
-
-  // Separate useEffect for handling search query
-  useEffect(() => {
-    const filteredData = productTableData.filter((product) => {
-      const numMatchesSearch = product.num
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const descriptionMatchesSearch = product.description
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return numMatchesSearch || descriptionMatchesSearch;
-    });
-    setFilteredProducts(filteredData);
-  }, [searchQuery, productTableData]);
+  }, [isSoldFilter, searchQuery, BatteryTableData]);
 
   const handlePagination = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -329,8 +309,7 @@ export function Tables() {
       head: [
         [
           "Id",
-          "Product Number",
-          "Description",
+          "Cells Count",
           "Selling Price",
           "Purchase Price",
           "Tax",
@@ -340,11 +319,10 @@ export function Tables() {
           "Status",
         ],
       ],
-      body: filteredProducts.map(
+      body: filteredBatteries.map(
         ({
           id,
-          num,
-          description,
+          cells_count,
           selling_price,
           purchase_price,
           tax,
@@ -354,8 +332,7 @@ export function Tables() {
           is_sold,
         }) => [
           id,
-          num,
-          description,
+          cells_count,
           selling_price,
           purchase_price,
           tax,
@@ -366,58 +343,9 @@ export function Tables() {
         ],
       ),
     });
-    doc.save("products.pdf");
+    doc.save("Batteries.pdf");
   };
-  // Function to download data as CSV
-  const handleDownloadCSV = () => {
-    const headers = [
-      { label: "Id", key: "id" },
-      { label: "Product Number", key: "num" },
-      { label: "Description", key: "description" },
-      { label: "Selling Price", key: "selling_price" },
-      { label: "Purchase Price", key: "purchase_price" },
-      { label: "Tax", key: "tax" },
-      { label: "Other Expenses", key: "other_expenses" },
-      { label: "Discount", key: "discount" },
-      { label: "Context", key: "context" },
-      { label: "Status", key: "status" },
-    ];
-    const csvData = filteredProducts.map(
-      ({
-        id,
-        num,
-        description,
-        selling_price,
-        purchase_price,
-        tax,
-        other_expenses,
-        discount,
-        context,
-        is_sold,
-      }) => ({
-        id,
-        num,
-        description,
-        selling_price,
-        purchase_price,
-        tax,
-        other_expenses,
-        discount,
-        context,
-        status: is_sold ? "Sold" : "In Stock",
-      }),
-    );
-    const csvReport = {
-      filename: "products.csv",
-      headers,
-      data: csvData,
-    };
-    return (
-      <CSVLink {...csvReport}>
-        <FaFileCsv className="text-xl" />
-      </CSVLink>
-    );
-  };
+
   return (
     <div className="flex flex-col mt-12 mb-8 overflow-x-auto">
       <Card>
@@ -428,12 +356,12 @@ export function Tables() {
               color="white"
               className="mb-2 md:mb-0 md:mr-4"
             >
-              Products
+              Batteries
             </Typography>
             <div className="flex flex-col items-center gap-2 md:flex-row">
               <input
                 type="text"
-                placeholder="Search product..."
+                placeholder="Search Battery..."
                 className="px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
                 value={searchQuery}
                 onChange={handleSearchChange}
@@ -454,10 +382,10 @@ export function Tables() {
                 <option value="all">All</option>
                 <option value="sold">Sold</option>
                 <option value="inStock">In Stock</option>
-                <option value="selected">Selected</option>
+                <option value="dismantled">Dismantled</option>
               </select>
               <Button
-                onClick={handleAddProduct}
+                onClick={handleAddBattery}
                 color="indigo"
                 buttonType="filled"
                 size="regular"
@@ -468,7 +396,7 @@ export function Tables() {
                 className="flex items-center gap-2 mt-2 md:mt-0"
               >
                 <IoMdAddCircle className="text-xl" />
-                <span className="text-base font-medium">Add New Product</span>
+                <span className="text-base font-medium">Add New Battery</span>
               </Button>
               <Button
                 color="gray"
@@ -482,13 +410,13 @@ export function Tables() {
               >
                 <FaFilePdf className="text-xl" />
               </Button>
-              {handleDownloadCSV()}
+              {/* {handleDownloadCSV()} */}
             </div>
           </div>
         </CardHeader>
 
         <CardBody className="px-0 pt-0 pb-2">
-          {filteredProducts.length === 0 ? (
+          {filteredBatteries?.length === 0 ? (
             <div className="py-4 text-center">No results found.</div>
           ) : (
             <div className="overflow-x-auto">
@@ -497,9 +425,8 @@ export function Tables() {
                 <thead>
                   <tr>
                     {[
-                      "Product Number",
+                      "Cells Count",
                       "Status",
-                      "Description",
                       "Selling Price",
                       "Purchase Price",
                       "Tax",
@@ -526,12 +453,11 @@ export function Tables() {
                 </thead>
                 {/* Table body */}
                 <tbody>
-                  {filteredProducts.map(
+                  {filteredBatteries?.map(
                     (
                       {
                         id,
-                        num,
-                        description,
+                        cells_count,
                         selling_price,
                         purchase_price,
                         tax,
@@ -544,7 +470,7 @@ export function Tables() {
                       key,
                     ) => {
                       const className = `py-3 px-5 ${
-                        key === currentProducts.length - 1
+                        key === currentBatteries.length - 1
                           ? ""
                           : "border-b border-blue-gray-50"
                       }`;
@@ -560,7 +486,7 @@ export function Tables() {
                                   color="blue-gray"
                                   className="font-semibold"
                                 >
-                                  {num}
+                                  {cells_count}
                                 </Typography>
                               </div>
                             </div>
@@ -572,11 +498,6 @@ export function Tables() {
                               ) : (
                                 <span className="text-green-500">In Stock</span>
                               )}
-                            </Typography>
-                          </td>
-                          <td className={className}>
-                            <Typography className="text-xs font-semibold text-blue-gray-600">
-                              {description}
                             </Typography>
                           </td>
                           <td className={className}>
@@ -615,24 +536,24 @@ export function Tables() {
                               {!isAgent && !is_sold && (
                                 <FaEdit
                                   className="text-blue-500 cursor-pointer"
-                                  onClick={() => handleViewEditProduct(id)}
+                                  onClick={() => handleViewEditBattery(id)}
                                 />
                               )}
                               {!is_sold && ( // Conditionally render the edit button
                                 <AiOutlineTransaction
                                   className="text-blue-500 cursor-pointer material-icons"
-                                  onClick={() => handleSellProducts(id)}
+                                  onClick={() => handleSellBatteries(id)}
                                 />
                               )}
                               {(!isAgent || !isAdmin) && (
                                 <MdAutoDelete
                                   className="ml-2 text-red-500 cursor-pointer material-icons"
-                                  onClick={() => handleDeleteProduct(id)}
+                                  onClick={() => handleDeleteBattery(id)}
                                 />
                               )}
-                              <FaQrcode
+                              <RiPageSeparator
                                 className="ml-2 text-green-500 cursor-pointer material-icons"
-                                onClick={() => handleViewProduct(id)}
+                                onClick={() => handleDismantle(id, cells_count)}
                               />
                             </div>
                           </td>
@@ -661,7 +582,7 @@ export function Tables() {
                                     <div key={index}>
                                       <span className="text-blue-500">
                                         {new Date(
-                                          action.creates_at,
+                                          action.created_at,
                                         ).toLocaleString("default", {
                                           year: "numeric",
                                           month: "2-digit",
@@ -687,18 +608,18 @@ export function Tables() {
         </CardBody>
       </Card>
       <div className="flex items-center justify-between mt-6">
-        {/* Total products */}
+        {/* Total Batteries */}
         <div>
           <Typography
             variant="small"
             color="blue-gray"
             className="font-semibold"
           >
-            Total Products: {filteredProducts.length}
+            Total Batteries: {filteredBatteries?.length}
           </Typography>
         </div>
 
-        {/* Products count */}
+        {/* Batteries count */}
         <div className="flex items-center gap-4">
           <div>
             <Typography
@@ -706,7 +627,7 @@ export function Tables() {
               color="blue-gray"
               className="font-semibold"
             >
-              Showing {currentProducts.length} of {filteredProducts.length}
+              Showing {currentBatteries?.length} of {filteredBatteries?.length}
             </Typography>
           </div>
         </div>
@@ -715,7 +636,7 @@ export function Tables() {
       <div className="flex justify-center mt-4 mb-4">
         <ul className="flex flex-wrap gap-2">
           {Array.from(
-            { length: Math.ceil(productTableData.length / productsPerPage) },
+            { length: Math.ceil(BatteryTableData?.length / BatteriesPerPage) },
             (_, i) => (
               <li key={i}>
                 <Button
@@ -740,10 +661,10 @@ export function Tables() {
             <div className="w-full max-w-md p-8 bg-white rounded-md shadow-lg">
               <div className="flex items-center justify-between px-4 py-2 mb-6 bg-gray-100 rounded-lg">
                 <h2 className="text-lg font-semibold text-gray-800">
-                  Add New Product
+                  Add New Battery
                 </h2>
                 <button
-                  onClick={handleAddProduct}
+                  onClick={handleAddBattery}
                   className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none"
                 >
                   <IoIosCloseCircle className="text-gray-600" />
@@ -751,35 +672,17 @@ export function Tables() {
               </div>
               <div className="mb-4">
                 <label className="block mb-1 text-sm text-gray-600">
-                  Product Number
+                  Cell Count
                 </label>
                 <input
                   type="text"
-                  placeholder="Product Number"
+                  placeholder="Cell Count"
                   required
-                  value={productData.num}
+                  value={BatteryData.cells_count}
                   onChange={(e) =>
-                    setProductData({ ...productData, num: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-1 text-sm text-gray-600">
-                  Description
-                </label>
-                <label className="block mb-1 text-sm text-gray-600">
-                  Eg: Product_name - Product_type - year - side
-                </label>
-                <textarea
-                  type="text"
-                  placeholder="Description"
-                  required
-                  value={productData.description}
-                  onChange={(e) =>
-                    setProductData({
-                      ...productData,
-                      description: e.target.value,
+                    setBatteryData({
+                      ...BatteryData,
+                      cells_count: e.target.value,
                     })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
@@ -794,10 +697,10 @@ export function Tables() {
                     type="number"
                     placeholder="Price"
                     required
-                    value={productData.selling_price}
+                    value={BatteryData.selling_price}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setBatteryData({
+                        ...BatteryData,
                         selling_price: e.target.value,
                       })
                     }
@@ -812,10 +715,10 @@ export function Tables() {
                     type="number"
                     placeholder="purchase price"
                     required
-                    value={productData.purchase_price}
+                    value={BatteryData.purchase_price}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setBatteryData({
+                        ...BatteryData,
                         purchase_price: e.target.value,
                       })
                     }
@@ -832,9 +735,9 @@ export function Tables() {
                     type="number"
                     placeholder="tax"
                     required
-                    value={productData.tax}
+                    value={BatteryData.tax}
                     onChange={(e) =>
-                      setProductData({ ...productData, tax: e.target.value })
+                      setBatteryData({ ...BatteryData, tax: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
                   />
@@ -846,11 +749,11 @@ export function Tables() {
                   <input
                     type="text"
                     placeholder="number"
-                    value={productData.other_expenses}
+                    value={BatteryData.other_expenses}
                     required={true}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setBatteryData({
+                        ...BatteryData,
                         other_expenses: e.target.value,
                       })
                     }
@@ -880,14 +783,14 @@ export function Tables() {
                 {loading ? (
                   <Loader type="spinner-default" bgColor={"#fff"} size={20} />
                 ) : (
-                  "Add Product"
+                  "Add Battery"
                 )}
               </Button>
             </div>
           </div>
         </form>
       )}
-      {viewProduct && (
+      {viewBattery && (
         <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full bg-black bg-opacity-60">
           <div className="p-8 bg-white rounded-md shadow-lg">
             <div className="flex flex-col items-center gap-4">
@@ -895,11 +798,11 @@ export function Tables() {
                 <Typography variant="h6" color="gray">
                   QR Code
                 </Typography>
-                <button onClick={() => setViewProduct(false)}>
+                <button onClick={() => setViewBattery(false)}>
                   <IoIosCloseCircle className="text-xl text-gray-500 hover:text-gray-700" />
                 </button>
               </div>
-              <img src={product} alt="QR Code" className="mb-4" />
+              <img src={Battery} alt="QR Code" className="mb-4" />
 
               {/* Print button */}
               <Button
@@ -920,22 +823,22 @@ export function Tables() {
         </div>
       )}
 
-      {sellProduct && (
+      {sellBattery && (
         <form>
           <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full overflow-y-auto bg-black bg-opacity-60">
             <div className="w-full max-w-md p-8 bg-white rounded-md shadow-lg">
               <div className="flex items-center justify-between px-4 py-2 mb-6 bg-gray-100 rounded-lg">
                 <h2 className="text-lg font-semibold text-gray-800">
-                  Sell product
+                  Sell Battery
                 </h2>
                 <button
-                  onClick={() => setSellProduct(false)}
+                  onClick={() => setSellBattery(false)}
                   className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none"
                 >
                   <IoIosCloseCircle className="text-gray-600" />
                 </button>
               </div>
-              {/* Edit product form */}
+              {/* Edit Battery form */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="">
                   <div>
@@ -946,10 +849,10 @@ export function Tables() {
                       type="number"
                       placeholder="Discount"
                       required
-                      defaultValue={singleProduct?.discount}
+                      defaultValue={singleBattery?.discount}
                       onChange={(e) =>
-                        setProductData({
-                          ...productData,
+                        setBatteryData({
+                          ...BatteryData,
                           discount: e.target.value,
                         })
                       }
@@ -962,11 +865,11 @@ export function Tables() {
                     </label>
                     <input
                       type="text"
-                      placeholder={`Selling Price: ${singleProduct?.selling_price} RWF`}
+                      placeholder={`Selling Price: ${singleBattery?.selling_price} RWF`}
                       required
                       onChange={(e) =>
-                        setProductData({
-                          ...productData,
+                        setBatteryData({
+                          ...BatteryData,
                           selling_price: e.target.value,
                         })
                       }
@@ -982,10 +885,10 @@ export function Tables() {
                     type="text"
                     placeholder="Context"
                     required
-                    value={productData.context}
+                    value={BatteryData.context}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setBatteryData({
+                        ...BatteryData,
                         context: e.target.value,
                       })
                     }
@@ -1002,35 +905,35 @@ export function Tables() {
                 iconOnly={false}
                 ripple="light"
                 className="w-full mt-3"
-                onClick={handleSellProduct}
+                onClick={handleSellBattery}
               >
                 {loading ? (
                   <Loader type="spinner-default" bgColor={"#fff"} size={20} />
                 ) : (
-                  "Sell Product"
+                  "Sell Battery"
                 )}
               </Button>
             </div>
           </div>
         </form>
       )}
-      {/* EDIT PRODUCT */}
-      {editProduct && (
+      {/* EDIT Battery */}
+      {editBattery && (
         <form>
           <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full overflow-y-auto bg-black bg-opacity-60">
             <div className="w-full max-w-md p-8 bg-white rounded-md shadow-lg">
               <div className="flex items-center justify-between px-4 py-2 mb-6 bg-gray-100 rounded-lg">
                 <h2 className="text-lg font-semibold text-gray-800">
-                  Edit Product
+                  Edit Battery
                 </h2>
                 <button
-                  onClick={() => setEditProduct(false)}
+                  onClick={() => setEditBattery(false)}
                   className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none"
                 >
                   <IoIosCloseCircle className="text-gray-600" />
                 </button>
               </div>
-              {/* Edit product form */}
+              {/* Edit Battery form */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="block mb-1 text-sm text-gray-600">
@@ -1040,10 +943,10 @@ export function Tables() {
                     type="number"
                     placeholder="Selling Price"
                     required
-                    defaultValue={singleProduct?.selling_price}
+                    defaultValue={singleBattery?.selling_price}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setBatteryData({
+                        ...BatteryData,
                         selling_price: e.target.value,
                       })
                     }
@@ -1057,11 +960,11 @@ export function Tables() {
                   <input
                     type="text"
                     placeholder="Purchase Price"
-                    defaultValue={singleProduct?.purchase_price}
+                    defaultValue={singleBattery?.purchase_price}
                     required
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setBatteryData({
+                        ...BatteryData,
                         purchase_price: e.target.value,
                       })
                     }
@@ -1076,9 +979,9 @@ export function Tables() {
                     type="text"
                     placeholder="Tax"
                     required
-                    defaultValue={singleProduct?.tax}
+                    defaultValue={singleBattery?.tax}
                     onChange={(e) =>
-                      setProductData({ ...productData, tax: e.target.value })
+                      setBatteryData({ ...BatteryData, tax: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
                   />
@@ -1091,10 +994,10 @@ export function Tables() {
                     type="text"
                     placeholder="Other Expenses"
                     required
-                    defaultValue={singleProduct?.other_expenses}
+                    defaultValue={singleBattery?.other_expenses}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setBatteryData({
+                        ...BatteryData,
                         other_expenses: e.target.value,
                       })
                     }
@@ -1103,17 +1006,17 @@ export function Tables() {
                 </div>
                 <div>
                   <label className="block mb-1 text-sm text-gray-600">
-                    Description
+                    Cell Count
                   </label>
-                  <textarea
+                  <input
                     type="text"
-                    placeholder="Description"
+                    placeholder="Cell Count"
                     required
-                    defaultValue={singleProduct?.description}
+                    defaultValue={singleBattery?.cells_count}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
-                        description: e.target.value,
+                      setBatteryData({
+                        ...BatteryData,
+                        cells_count: e.target.value,
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
@@ -1129,7 +1032,7 @@ export function Tables() {
                     iconOnly={false}
                     ripple="light"
                     className="w-full h-[60px] mt-7"
-                    onClick={handleEditProduct}
+                    onClick={handleEditBattery}
                   >
                     {loading ? (
                       <Loader
@@ -1138,7 +1041,7 @@ export function Tables() {
                         size={20}
                       />
                     ) : (
-                      "Edit Product"
+                      "Edit Battery"
                     )}
                   </Button>
                 </div>
@@ -1147,9 +1050,17 @@ export function Tables() {
           </div>
         </form>
       )}
+      {isDismantleModalOpen && (
+        <BatteryDismantleModal
+          isOpen={isDismantleModalOpen}
+          onClose={() => setIsDismantleModalOpen(false)}
+          batteryId={selectedBatteryIdForDismantle}
+          cellCount={selectedBatteryCellCount}
+        />
+      )}
       <ToastContainer />
     </div>
   );
 }
 
-export default Tables;
+export default Battery;

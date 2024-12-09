@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -14,31 +13,25 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaEdit } from "react-icons/fa";
 import { MdAutoDelete } from "react-icons/md";
-import { IoMdAddCircle } from "react-icons/io";
 import { IoIosCloseCircle } from "react-icons/io";
 import { AiOutlineTransaction } from "react-icons/ai";
-import { FaQrcode } from "react-icons/fa";
 import axios from "axios";
 import Loader from "react-js-loader";
 import { jwtDecode } from "jwt-decode";
 import { FaFilePdf } from "react-icons/fa6";
 import { FaFileCsv } from "react-icons/fa6";
 
-export function Tables() {
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [viewProduct, setViewProduct] = useState(false);
-  const [editProduct, setEditProduct] = useState(false);
-  const [sellProduct, setSellProduct] = useState(false);
-  const [product, setProduct] = useState("");
-  const [singleProduct, setSingleProduct] = useState({});
+export function Cells() {
+  const [editCell, setEditCell] = useState(false);
+  const [sellCell, setSellCell] = useState(false);
+  const [singleCell, setSingleCell] = useState({});
   const [userRole, setUserRole] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [productTableData, setProductTableData] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [CellTableData, setCellTableData] = useState([]);
+  const [filteredCells, setFilteredCells] = useState([]);
   const [isSoldFilter, setIsSoldFilter] = useState("all");
-  const [productData, setProductData] = useState({
-    num: "",
-    description: "",
+  const [CellData, setCellData] = useState({
+    cell_no: "",
     selling_price: 0,
     purchase_price: 0,
     tax: 0,
@@ -49,15 +42,12 @@ export function Tables() {
     is_sold: false,
   });
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [editingProductId, setEditingProductId] = useState(null);
+  const [editingCellId, setEditingCellId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [productsPerPage] = useState(15);
+  const [CellsPerPage] = useState(15);
 
   const API_URL = "https://test.husseinking.com";
-  const handleAddProduct = () => {
-    setShowAddForm(!showAddForm);
-  };
+
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
@@ -68,13 +58,13 @@ export function Tables() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(` ${API_URL}/products/`, {
+        const response = await axios.get(` ${API_URL}/battery/cell`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
-        setProductTableData(response.data?.data?.products);
+        setCellTableData(response.data?.data?.batteries);
       } catch (error) {
         console.log(error);
       }
@@ -82,135 +72,75 @@ export function Tables() {
     fetchData();
   }, []);
 
-  // Update the calculation of indexOfFirstProduct and indexOfLastProduct to use filteredProducts
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct,
-  );
+  // Update the calculation of indexOfFirstCell and indexOfLastCell to use filteredCells
+  const indexOfLastCell = currentPage * CellsPerPage;
+  const indexOfFirstCell = indexOfLastCell - CellsPerPage;
+  const currentCells = filteredCells.slice(indexOfFirstCell, indexOfLastCell);
 
-  const handleSellProducts = async (id) => {
-    const getProductResponse = await axios.get(`${API_URL}/products/${id}`, {
+  const handleSellCells = async (id) => {
+    const getCellResponse = await axios.get(`${API_URL}/battery/cell/${id}`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       },
     });
-    setSingleProduct(getProductResponse?.data?.data?.product);
-    setSellProduct(true);
-    setEditingProductId(id);
-    // Other logic for editing product...
-  };
-  const handleViewProduct = async (id) => {
-    setViewProduct(true);
-    setProduct(`${API_URL}/products/qrcode/${id}`);
+    setSingleCell(getCellResponse?.data?.data?.cell);
+    setSellCell(true);
+    setEditingCellId(id);
   };
   const isAgent = userRole === "agent";
   const isAdmin = userRole === "admin";
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleViewEditCell = async (id) => {
+    const getCellResponse = await axios.get(`${API_URL}/battery/cell/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    });
+    setSingleCell(getCellResponse?.data?.data?.cell);
+    setEditCell(true);
+    setEditingCellId(id);
+  };
+  const handleEditCell = async (id) => {
     setLoading(true);
     try {
-      const {
-        num,
-        description,
-        selling_price,
-        purchase_price,
-        tax,
-        other_expenses,
-      } = productData;
+      const { cell_no, selling_price, purchase_price, tax, other_expenses } =
+        CellData;
 
       const requestData = {
-        num,
-        description,
+        cell_no,
         selling_price,
         purchase_price,
         tax,
-        discount: 0,
-        is_sold: false,
-        sold_date: Date.now(),
-        context: "",
         other_expenses,
+        is_sold: false,
       };
-      const response = await axios.post(`${API_URL}/products/`, requestData, {
+      await axios.post(`${API_URL}/battery/cell/${id}`, requestData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
-      toast.success("Product added successfully");
-      window.location.reload();
-      setShowAddForm(false);
-    } catch (error) {
-      setErrorMessage("Failed to add product. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleViewEditProduct = async (id) => {
-    const getProductResponse = await axios.get(`${API_URL}/products/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
-    setSingleProduct(getProductResponse?.data?.data?.product);
-    setEditProduct(true);
-    setEditingProductId(id);
-  };
-  const handleEditProduct = async (id) => {
-    setLoading(true);
-    try {
-      const {
-        num,
-        description,
-        selling_price,
-        purchase_price,
-        tax,
-        other_expenses,
-      } = productData;
-
-      const requestData = {
-        num,
-        description,
-        selling_price,
-        purchase_price,
-        tax,
-        other_expenses,
-        is_sold: false,
-      };
-      const response = await axios.post(
-        `${API_URL}/products/${editingProductId}`,
-        requestData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        },
-      );
-      setEditProduct(false);
-      setProductData({
-        num: "",
-        description: "",
+      setEditCell(false);
+      setCellData({
+        cell_no: "",
         selling_price: 0,
         purchase_price: 0,
         tax: 0,
         other_expenses: 0,
       });
-      toast.success("Product updated successfully");
+      toast.success("Cell updated successfully");
       window.location.reload();
     } catch (error) {
-      console.error("Error updating product:", error);
-      toast.error("Error updating product");
+      console.error("Error updating Cell:", error);
+      toast.error("Error updating Cell");
     }
   };
-  const handleSellProduct = async () => {
+  const handleSellCell = async () => {
     setLoading(true);
     try {
-      const { discount, context, selling_price } = productData;
+      const { discount, context, selling_price } = CellData;
       const requestData = {
         discount,
         context,
@@ -218,9 +148,9 @@ export function Tables() {
         selling_price,
         sold_date: Date.now(),
       };
-      // get product
-      const response = await axios.post(
-        `${API_URL}/products/${editingProductId}`,
+      // get Cell
+      await axios.post(
+        `${API_URL}/battery/cell/${editingCellId}`,
         requestData,
         {
           headers: {
@@ -229,40 +159,34 @@ export function Tables() {
           },
         },
       );
-      toast.success("Product sold successfully");
+      toast.success("Cell sold successfully");
       window.location.reload();
-      setEditingProductId(null);
+      setEditingCellId(null);
     } catch (error) {
-      setErrorMessage("Failed to sell product. Please try again.");
+      toast.error("Error selling Cell:", error);
     } finally {
       setLoading(false);
     }
   };
-  const handlePrintQRCodeInPdf = () => {
-    const doc = new jsPDF();
-    doc.addImage(product, "JPEG", 10, 10, 100, 100);
-    doc.save("QRCode.pdf");
-    toast.success("QR Code printed successfully");
-  };
-  const handleDeleteProduct = async (id) => {
+  const handleDeleteCell = async (id) => {
     try {
-      // Show a confirmation dialog before deleting the product
+      // Show a confirmation dialog before deleting the Cell
       const confirmed = window.confirm(
-        "Are you sure you want to delete this product?",
+        "Are you sure you want to delete this Cell?",
       );
       if (!confirmed) {
         return; // If user cancels, do not proceed with deletion
       }
-      const response = await axios.delete(`${API_URL}/products/${id}`, {
+      await axios.delete(`${API_URL}/battery/cell/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
       window.location.reload();
-      toast.success("Product deleted successfully");
+      toast.success("Cell deleted successfully");
       window.location.reload();
     } catch (error) {
-      toast.error("Deleting product failed:", error);
+      toast.error("Deleting Cell failed:", error);
     }
   };
   const handleSearchChange = (e) => {
@@ -276,48 +200,41 @@ export function Tables() {
 
   useEffect(() => {
     if (isSoldFilter === "all") {
-      // Show all products without any additional filtering
-      setFilteredProducts(productTableData);
+      // Show all Cells without any additional filtering
+      setFilteredCells(CellTableData);
     } else {
       // Apply filtering based on the selected filter value
-      const filteredData = productTableData.filter((product) => {
-        const numMatchesSearch = product.num
+      const filteredData = CellTableData.filter((Cell) => {
+        const numMatchesSearch = Cell.cell_no
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
-        const descriptionMatchesSearch = product.description
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
-        let matchesSearch = numMatchesSearch || descriptionMatchesSearch;
+
+        let matchesSearch = numMatchesSearch;
 
         if (isSoldFilter === "selected") {
-          return product.actions.some(
-            (action) => action.action_type === "intent",
-          );
+          return Cell.actions.some((action) => action.action_type === "intent");
         } else if (isSoldFilter === "sold") {
-          return matchesSearch && product.is_sold;
+          return matchesSearch && Cell.is_sold;
         } else if (isSoldFilter === "inStock") {
-          return matchesSearch && !product.is_sold;
+          return matchesSearch && !Cell.is_sold;
         }
         return false;
       });
-      setFilteredProducts(filteredData);
+      setFilteredCells(filteredData);
     }
     setCurrentPage(1); // Reset pagination to first page when filter changes
-  }, [isSoldFilter, searchQuery, productTableData]);
+  }, [isSoldFilter, searchQuery, CellTableData]);
 
   // Separate useEffect for handling search query
   useEffect(() => {
-    const filteredData = productTableData.filter((product) => {
-      const numMatchesSearch = product.num
+    const filteredData = CellTableData.filter((Cell) => {
+      const numMatchesSearch = Cell.cell_no
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
-      const descriptionMatchesSearch = product.description
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return numMatchesSearch || descriptionMatchesSearch;
+      return numMatchesSearch;
     });
-    setFilteredProducts(filteredData);
-  }, [searchQuery, productTableData]);
+    setFilteredCells(filteredData);
+  }, [searchQuery, CellTableData]);
 
   const handlePagination = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -329,8 +246,7 @@ export function Tables() {
       head: [
         [
           "Id",
-          "Product Number",
-          "Description",
+          "Cell Number",
           "Selling Price",
           "Purchase Price",
           "Tax",
@@ -340,11 +256,10 @@ export function Tables() {
           "Status",
         ],
       ],
-      body: filteredProducts.map(
+      body: filteredCells.map(
         ({
           id,
-          num,
-          description,
+          cell_no,
           selling_price,
           purchase_price,
           tax,
@@ -354,8 +269,7 @@ export function Tables() {
           is_sold,
         }) => [
           id,
-          num,
-          description,
+          cell_no,
           selling_price,
           purchase_price,
           tax,
@@ -366,14 +280,13 @@ export function Tables() {
         ],
       ),
     });
-    doc.save("products.pdf");
+    doc.save("Cells.pdf");
   };
   // Function to download data as CSV
   const handleDownloadCSV = () => {
     const headers = [
       { label: "Id", key: "id" },
-      { label: "Product Number", key: "num" },
-      { label: "Description", key: "description" },
+      { label: "Cell Number", key: "cell_no" },
       { label: "Selling Price", key: "selling_price" },
       { label: "Purchase Price", key: "purchase_price" },
       { label: "Tax", key: "tax" },
@@ -382,11 +295,10 @@ export function Tables() {
       { label: "Context", key: "context" },
       { label: "Status", key: "status" },
     ];
-    const csvData = filteredProducts.map(
+    const csvData = filteredCells.map(
       ({
         id,
-        num,
-        description,
+        cell_no,
         selling_price,
         purchase_price,
         tax,
@@ -396,8 +308,7 @@ export function Tables() {
         is_sold,
       }) => ({
         id,
-        num,
-        description,
+        cell_no,
         selling_price,
         purchase_price,
         tax,
@@ -408,7 +319,7 @@ export function Tables() {
       }),
     );
     const csvReport = {
-      filename: "products.csv",
+      filename: "Cells.csv",
       headers,
       data: csvData,
     };
@@ -428,12 +339,12 @@ export function Tables() {
               color="white"
               className="mb-2 md:mb-0 md:mr-4"
             >
-              Products
+              Cells
             </Typography>
             <div className="flex flex-col items-center gap-2 md:flex-row">
               <input
                 type="text"
-                placeholder="Search product..."
+                placeholder="Search Cell..."
                 className="px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
                 value={searchQuery}
                 onChange={handleSearchChange}
@@ -454,22 +365,7 @@ export function Tables() {
                 <option value="all">All</option>
                 <option value="sold">Sold</option>
                 <option value="inStock">In Stock</option>
-                <option value="selected">Selected</option>
               </select>
-              <Button
-                onClick={handleAddProduct}
-                color="indigo"
-                buttonType="filled"
-                size="regular"
-                rounded={false}
-                block={false}
-                iconOnly={false}
-                ripple="light"
-                className="flex items-center gap-2 mt-2 md:mt-0"
-              >
-                <IoMdAddCircle className="text-xl" />
-                <span className="text-base font-medium">Add New Product</span>
-              </Button>
               <Button
                 color="gray"
                 buttonType="filled"
@@ -488,7 +384,7 @@ export function Tables() {
         </CardHeader>
 
         <CardBody className="px-0 pt-0 pb-2">
-          {filteredProducts.length === 0 ? (
+          {filteredCells.length === 0 ? (
             <div className="py-4 text-center">No results found.</div>
           ) : (
             <div className="overflow-x-auto">
@@ -497,9 +393,8 @@ export function Tables() {
                 <thead>
                   <tr>
                     {[
-                      "Product Number",
+                      "Cell Number",
                       "Status",
-                      "Description",
                       "Selling Price",
                       "Purchase Price",
                       "Tax",
@@ -526,12 +421,11 @@ export function Tables() {
                 </thead>
                 {/* Table body */}
                 <tbody>
-                  {filteredProducts.map(
+                  {filteredCells.map(
                     (
                       {
                         id,
-                        num,
-                        description,
+                        cell_no,
                         selling_price,
                         purchase_price,
                         tax,
@@ -544,7 +438,7 @@ export function Tables() {
                       key,
                     ) => {
                       const className = `py-3 px-5 ${
-                        key === currentProducts.length - 1
+                        key === currentCells.length - 1
                           ? ""
                           : "border-b border-blue-gray-50"
                       }`;
@@ -560,7 +454,7 @@ export function Tables() {
                                   color="blue-gray"
                                   className="font-semibold"
                                 >
-                                  {num}
+                                  {cell_no}
                                 </Typography>
                               </div>
                             </div>
@@ -572,11 +466,6 @@ export function Tables() {
                               ) : (
                                 <span className="text-green-500">In Stock</span>
                               )}
-                            </Typography>
-                          </td>
-                          <td className={className}>
-                            <Typography className="text-xs font-semibold text-blue-gray-600">
-                              {description}
                             </Typography>
                           </td>
                           <td className={className}>
@@ -615,25 +504,21 @@ export function Tables() {
                               {!isAgent && !is_sold && (
                                 <FaEdit
                                   className="text-blue-500 cursor-pointer"
-                                  onClick={() => handleViewEditProduct(id)}
+                                  onClick={() => handleViewEditCell(id)}
                                 />
                               )}
                               {!is_sold && ( // Conditionally render the edit button
                                 <AiOutlineTransaction
                                   className="text-blue-500 cursor-pointer material-icons"
-                                  onClick={() => handleSellProducts(id)}
+                                  onClick={() => handleSellCells(id)}
                                 />
                               )}
                               {(!isAgent || !isAdmin) && (
                                 <MdAutoDelete
                                   className="ml-2 text-red-500 cursor-pointer material-icons"
-                                  onClick={() => handleDeleteProduct(id)}
+                                  onClick={() => handleDeleteCell(id)}
                                 />
                               )}
-                              <FaQrcode
-                                className="ml-2 text-green-500 cursor-pointer material-icons"
-                                onClick={() => handleViewProduct(id)}
-                              />
                             </div>
                           </td>
                           {/* Action Type and Action Owner */}
@@ -661,7 +546,7 @@ export function Tables() {
                                     <div key={index}>
                                       <span className="text-blue-500">
                                         {new Date(
-                                          action.creates_at,
+                                          action.created_at,
                                         ).toLocaleString("default", {
                                           year: "numeric",
                                           month: "2-digit",
@@ -687,18 +572,18 @@ export function Tables() {
         </CardBody>
       </Card>
       <div className="flex items-center justify-between mt-6">
-        {/* Total products */}
+        {/* Total Cells */}
         <div>
           <Typography
             variant="small"
             color="blue-gray"
             className="font-semibold"
           >
-            Total Products: {filteredProducts.length}
+            Total Cells: {filteredCells.length}
           </Typography>
         </div>
 
-        {/* Products count */}
+        {/* Cells count */}
         <div className="flex items-center gap-4">
           <div>
             <Typography
@@ -706,7 +591,7 @@ export function Tables() {
               color="blue-gray"
               className="font-semibold"
             >
-              Showing {currentProducts.length} of {filteredProducts.length}
+              Showing {currentCells.length} of {filteredCells.length}
             </Typography>
           </div>
         </div>
@@ -715,7 +600,7 @@ export function Tables() {
       <div className="flex justify-center mt-4 mb-4">
         <ul className="flex flex-wrap gap-2">
           {Array.from(
-            { length: Math.ceil(productTableData.length / productsPerPage) },
+            { length: Math.ceil(CellTableData.length / CellsPerPage) },
             (_, i) => (
               <li key={i}>
                 <Button
@@ -733,209 +618,22 @@ export function Tables() {
           )}
         </ul>
       </div>
-
-      {showAddForm && (
+      {sellCell && (
         <form>
           <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full overflow-y-auto bg-black bg-opacity-60">
             <div className="w-full max-w-md p-8 bg-white rounded-md shadow-lg">
               <div className="flex items-center justify-between px-4 py-2 mb-6 bg-gray-100 rounded-lg">
                 <h2 className="text-lg font-semibold text-gray-800">
-                  Add New Product
+                  Sell Cell
                 </h2>
                 <button
-                  onClick={handleAddProduct}
+                  onClick={() => setSellCell(false)}
                   className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none"
                 >
                   <IoIosCloseCircle className="text-gray-600" />
                 </button>
               </div>
-              <div className="mb-4">
-                <label className="block mb-1 text-sm text-gray-600">
-                  Product Number
-                </label>
-                <input
-                  type="text"
-                  placeholder="Product Number"
-                  required
-                  value={productData.num}
-                  onChange={(e) =>
-                    setProductData({ ...productData, num: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-1 text-sm text-gray-600">
-                  Description
-                </label>
-                <label className="block mb-1 text-sm text-gray-600">
-                  Eg: Product_name - Product_type - year - side
-                </label>
-                <textarea
-                  type="text"
-                  placeholder="Description"
-                  required
-                  value={productData.description}
-                  onChange={(e) =>
-                    setProductData({
-                      ...productData,
-                      description: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block mb-1 text-sm text-gray-600">
-                    Selling Price
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Price"
-                    required
-                    value={productData.selling_price}
-                    onChange={(e) =>
-                      setProductData({
-                        ...productData,
-                        selling_price: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm text-gray-600">
-                    Cost
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="purchase price"
-                    required
-                    value={productData.purchase_price}
-                    onChange={(e) =>
-                      setProductData({
-                        ...productData,
-                        purchase_price: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block mb-1 text-sm text-gray-600">
-                    Tax
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="tax"
-                    required
-                    value={productData.tax}
-                    onChange={(e) =>
-                      setProductData({ ...productData, tax: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm text-gray-600">
-                    Other Expanses
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="number"
-                    value={productData.other_expenses}
-                    required={true}
-                    onChange={(e) =>
-                      setProductData({
-                        ...productData,
-                        other_expenses: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-              {errorMessage && (
-                <div
-                  className="px-4 py-3 text-red-700 bg-red-100 border-l-4 border-red-500"
-                  role="alert"
-                >
-                  <p className="font-bold">{errorMessage}</p>
-                </div>
-              )}
-              <Button
-                color="black"
-                buttonType="filled"
-                size="regular"
-                rounded={true}
-                block={false}
-                iconOnly={false}
-                ripple="light"
-                className="w-full"
-                onClick={handleSubmit}
-              >
-                {loading ? (
-                  <Loader type="spinner-default" bgColor={"#fff"} size={20} />
-                ) : (
-                  "Add Product"
-                )}
-              </Button>
-            </div>
-          </div>
-        </form>
-      )}
-      {viewProduct && (
-        <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full bg-black bg-opacity-60">
-          <div className="p-8 bg-white rounded-md shadow-lg">
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center justify-between w-full ">
-                <Typography variant="h6" color="gray">
-                  QR Code
-                </Typography>
-                <button onClick={() => setViewProduct(false)}>
-                  <IoIosCloseCircle className="text-xl text-gray-500 hover:text-gray-700" />
-                </button>
-              </div>
-              <img src={product} alt="QR Code" className="mb-4" />
-
-              {/* Print button */}
-              <Button
-                color="black"
-                buttonType="filled"
-                size="regular"
-                rounded={true}
-                block={false}
-                iconOnly={false}
-                ripple="light"
-                className="w-full"
-                onClick={handlePrintQRCodeInPdf}
-              >
-                Print QR Code
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {sellProduct && (
-        <form>
-          <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full overflow-y-auto bg-black bg-opacity-60">
-            <div className="w-full max-w-md p-8 bg-white rounded-md shadow-lg">
-              <div className="flex items-center justify-between px-4 py-2 mb-6 bg-gray-100 rounded-lg">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Sell product
-                </h2>
-                <button
-                  onClick={() => setSellProduct(false)}
-                  className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none"
-                >
-                  <IoIosCloseCircle className="text-gray-600" />
-                </button>
-              </div>
-              {/* Edit product form */}
+              {/* Edit Cell form */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="">
                   <div>
@@ -946,10 +644,10 @@ export function Tables() {
                       type="number"
                       placeholder="Discount"
                       required
-                      defaultValue={singleProduct?.discount}
+                      defaultValue={singleCell?.discount}
                       onChange={(e) =>
-                        setProductData({
-                          ...productData,
+                        setCellData({
+                          ...CellData,
                           discount: e.target.value,
                         })
                       }
@@ -962,11 +660,11 @@ export function Tables() {
                     </label>
                     <input
                       type="text"
-                      placeholder={`Selling Price: ${singleProduct?.selling_price} RWF`}
+                      placeholder={`Selling Price: ${singleCell?.selling_price} RWF`}
                       required
                       onChange={(e) =>
-                        setProductData({
-                          ...productData,
+                        setCellData({
+                          ...CellData,
                           selling_price: e.target.value,
                         })
                       }
@@ -982,10 +680,10 @@ export function Tables() {
                     type="text"
                     placeholder="Context"
                     required
-                    value={productData.context}
+                    value={CellData.context}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setCellData({
+                        ...CellData,
                         context: e.target.value,
                       })
                     }
@@ -1002,35 +700,35 @@ export function Tables() {
                 iconOnly={false}
                 ripple="light"
                 className="w-full mt-3"
-                onClick={handleSellProduct}
+                onClick={handleSellCell}
               >
                 {loading ? (
                   <Loader type="spinner-default" bgColor={"#fff"} size={20} />
                 ) : (
-                  "Sell Product"
+                  "Sell Cell"
                 )}
               </Button>
             </div>
           </div>
         </form>
       )}
-      {/* EDIT PRODUCT */}
-      {editProduct && (
+      {/* EDIT Cell */}
+      {editCell && (
         <form>
           <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full overflow-y-auto bg-black bg-opacity-60">
             <div className="w-full max-w-md p-8 bg-white rounded-md shadow-lg">
               <div className="flex items-center justify-between px-4 py-2 mb-6 bg-gray-100 rounded-lg">
                 <h2 className="text-lg font-semibold text-gray-800">
-                  Edit Product
+                  Edit Cell
                 </h2>
                 <button
-                  onClick={() => setEditProduct(false)}
+                  onClick={() => setEditCell(false)}
                   className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none"
                 >
                   <IoIosCloseCircle className="text-gray-600" />
                 </button>
               </div>
-              {/* Edit product form */}
+              {/* Edit Cell form */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="block mb-1 text-sm text-gray-600">
@@ -1040,10 +738,10 @@ export function Tables() {
                     type="number"
                     placeholder="Selling Price"
                     required
-                    defaultValue={singleProduct?.selling_price}
+                    defaultValue={singleCell?.selling_price}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setCellData({
+                        ...CellData,
                         selling_price: e.target.value,
                       })
                     }
@@ -1057,11 +755,11 @@ export function Tables() {
                   <input
                     type="text"
                     placeholder="Purchase Price"
-                    defaultValue={singleProduct?.purchase_price}
+                    defaultValue={singleCell?.purchase_price}
                     required
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setCellData({
+                        ...CellData,
                         purchase_price: e.target.value,
                       })
                     }
@@ -1076,9 +774,9 @@ export function Tables() {
                     type="text"
                     placeholder="Tax"
                     required
-                    defaultValue={singleProduct?.tax}
+                    defaultValue={singleCell?.tax}
                     onChange={(e) =>
-                      setProductData({ ...productData, tax: e.target.value })
+                      setCellData({ ...CellData, tax: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
                   />
@@ -1091,10 +789,10 @@ export function Tables() {
                     type="text"
                     placeholder="Other Expenses"
                     required
-                    defaultValue={singleProduct?.other_expenses}
+                    defaultValue={singleCell?.other_expenses}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
+                      setCellData({
+                        ...CellData,
                         other_expenses: e.target.value,
                       })
                     }
@@ -1103,17 +801,17 @@ export function Tables() {
                 </div>
                 <div>
                   <label className="block mb-1 text-sm text-gray-600">
-                    Description
+                    Cell Number
                   </label>
-                  <textarea
+                  <input
                     type="text"
-                    placeholder="Description"
+                    placeholder="Cell Number"
                     required
-                    defaultValue={singleProduct?.description}
+                    defaultValue={singleCell?.cell_no}
                     onChange={(e) =>
-                      setProductData({
-                        ...productData,
-                        description: e.target.value,
+                      setCellData({
+                        ...CellData,
+                        cell_no: e.target.value,
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
@@ -1129,7 +827,7 @@ export function Tables() {
                     iconOnly={false}
                     ripple="light"
                     className="w-full h-[60px] mt-7"
-                    onClick={handleEditProduct}
+                    onClick={handleEditCell}
                   >
                     {loading ? (
                       <Loader
@@ -1138,7 +836,7 @@ export function Tables() {
                         size={20}
                       />
                     ) : (
-                      "Edit Product"
+                      "Edit Cell"
                     )}
                   </Button>
                 </div>
@@ -1152,4 +850,4 @@ export function Tables() {
   );
 }
 
-export default Tables;
+export default Cells;

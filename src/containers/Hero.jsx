@@ -29,7 +29,7 @@ const HeroSection = () => {
     }
   }, [selectedInputs, navigate]);
   useEffect(() => {
-    fetch("https://parts.husseinking.com/cars/", {
+    fetch("https://test.husseinking.com/cars/", {
       method: "GET",
     })
       .then((response) => response.json())
@@ -39,7 +39,7 @@ const HeroSection = () => {
       .catch((error) => console.log(error));
   }, []);
   useEffect(() => {
-    fetch(`https://parts.husseinking.com/cars/?model=${selectedInputs.model}`, {
+    fetch(`https://test.husseinking.com/cars/?model=${selectedInputs.model}`, {
       method: "GET",
     })
       .then((response) => response.json())
@@ -51,7 +51,7 @@ const HeroSection = () => {
 
   useEffect(() => {
     fetch(
-      `https://parts.husseinking.com/cars/?model=${selectedInputs.model}&year=${selectedInputs.year}`,
+      `https://test.husseinking.com/cars/?model=${selectedInputs.model}&year=${selectedInputs.year}`,
       {
         method: "GET",
       },
