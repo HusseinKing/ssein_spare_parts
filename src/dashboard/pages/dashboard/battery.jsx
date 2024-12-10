@@ -465,6 +465,7 @@ export function Battery() {
                         discount,
                         context,
                         is_sold,
+                        sold_fully
                         actions,
                       },
                       key,
@@ -533,7 +534,7 @@ export function Battery() {
 
                           <td className={className}>
                             <div className="flex justify-between gap-1">
-                              {!isAgent && !is_sold && (
+                              {!isAgent && !is_sold && sold_fully && (
                                 <FaEdit
                                   className="text-blue-500 cursor-pointer"
                                   onClick={() => handleViewEditBattery(id)}
