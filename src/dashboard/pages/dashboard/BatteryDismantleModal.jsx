@@ -29,7 +29,7 @@ const BatteryDismantleModal = ({ isOpen, onClose, batteryId, cellCount }) => {
     e.preventDefault();
     setLoading(true);
 
-    // Previous validation logic remains the same
+
 
     const formData = new FormData();
     formData.append("files", imageFile);
@@ -46,7 +46,6 @@ const BatteryDismantleModal = ({ isOpen, onClose, batteryId, cellCount }) => {
         },
       );
 
-      // Correctly extract the image path
       const imageUrl = imageUploadResponse.data.data.files[0].path;
 
       const dismantleRequestData = {
