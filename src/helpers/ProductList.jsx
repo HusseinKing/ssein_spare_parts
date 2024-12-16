@@ -208,12 +208,7 @@ const ProductParts = [
     imageUrl: "https://cdn.revolutionparts.com/assets/categories/default.webp",
     details: "Description for Vehicles, Equipment, Tools, & Supplies part",
   },
-  {
-    id: 28,
-    name: "Wheels",
-    imageUrl: "https://cdn.revolutionparts.com/assets/categories/wheels.webp",
-    details: "Description for Wheels part",
-  },
+  
 ];
 
 export default ProductParts;
