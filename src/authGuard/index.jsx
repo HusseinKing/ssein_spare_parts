@@ -10,7 +10,6 @@ const AuthGuard = ({ requiredRoles }) => {
   }
 
   if (requiredRoles) {
-    // Check if the user has any of the required roles
     const hasRequiredRole = requiredRoles.some((role) =>
       user.roles.includes(role),
     );
