@@ -6,7 +6,6 @@ const AuthGuard = ({ requiredRoles }) => {
   const { user } = useSelector((state) => state.auth);
 
   if (!user) {
-    // Redirect to the login page if the user is not authenticated
     return <Navigate to="/auth/login" />;
   }
 
